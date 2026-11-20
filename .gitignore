@@ -158,3 +158,6 @@ vite.config.ts.timestamp-*
 
 # Local workspace database
 /data/
+.vercel/
+.vercel
+.env*

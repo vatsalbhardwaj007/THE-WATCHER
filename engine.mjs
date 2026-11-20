@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto';
-
 export const DAY = 86_400_000;
 export const services = {
   'travel-staging': 'Travel staging',
@@ -117,7 +115,7 @@ export function emptyState() {
 }
 
 export function audit(state, event, detail, at) {
-  state.audit.unshift({ id: randomUUID(), event, detail, at });
+  state.audit.unshift({ id: crypto.randomUUID(), event, detail, at });
 }
 
 export function classify(endpoint, coverage, days, now) {

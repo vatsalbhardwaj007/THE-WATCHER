@@ -4,7 +4,7 @@ THE WATCHER is a local security operations workspace for a B2B travel platform. 
 
 ## Run locally
 
-Use Node.js **24.13 or later**. The frontend and server have zero third-party dependencies.
+Use Node.js **24.13 or later**. The local server runs with Node's built-in SQLite and has no dependencies to install.
 
 ```powershell
 cd .\the-watcher
@@ -67,7 +67,16 @@ This project implements the brief's defensive evidence intake, inventory, human 
 ## Verify
 
 ```powershell
+npm.cmd ci
 npm.cmd test
 ```
 
 The suite checks coverage and classifications, intake validation, deduplication, review gates, regressions, HTTP behavior, ticket output, and persistence across server restarts. Node 24 may emit an experimental SQLite notice on startup.
+
+## Deploy from GitHub to Vercel
+
+Import the repository into a Vercel Hobby project for personal, non-commercial use. The Express preset serves the dashboard and API. Connect a Turso Free SQLite database to the production environment. The Turso integration supplies `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
+
+Set `WATCHER_ACCESS_TOKEN` as a sensitive production environment variable using a generated password of at least 24 printable ASCII characters without spaces. Open the deployment over HTTPS and sign in with username `watcher` and that password. Keep database credentials and the dashboard password in Vercel's environment settings. Apply Vercel Authentication to all environments if you also want Vercel account sign-in.
+
+The hosted database initializes with synthetic data on the first authorized API request. The local SQLite file is separate and stays outside Git.
