@@ -2,17 +2,25 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import express from 'express';
 import { apiError, handleApi, json } from './api.mjs';
+import { seed } from './demo.mjs';
 import { InputError } from './engine.mjs';
 import { readBody, send } from './http.mjs';
 import { connectHostedWorkspace } from './turso.mjs';
 
 const shell = readFileSync(new URL('./public/index.html', import.meta.url));
+const demoModules = new Map([
+  ['/demo/api.mjs', readFileSync(new URL('./api.mjs', import.meta.url))],
+  ['/demo/demo.mjs', readFileSync(new URL('./demo.mjs', import.meta.url))],
+  ['/demo/engine.mjs', readFileSync(new URL('./engine.mjs', import.meta.url))],
+  ['/demo/report.mjs', readFileSync(new URL('./report.mjs', import.meta.url))],
+]);
 const hash = value => createHash('sha256').update(value).digest();
 
 export function createHostedApp({
   connect = connectHostedWorkspace,
   accessToken = process.env.WATCHER_ACCESS_TOKEN,
   hosted = process.env.VERCEL === '1',
+  publicDemo = !process.env.TURSO_DATABASE_URL && !process.env.TURSO_AUTH_TOKEN,
   now = Date.now,
 } = {}) {
   const app = express();
@@ -23,14 +31,16 @@ export function createHostedApp({
 
   app.use(async (request, response) => {
     try {
-      if (!expectedAuthorization) throw new InputError('The workspace administrator must configure access.', 503);
-      const received = (request.headers.authorization ?? '').replace(/^basic /i, 'Basic ');
-      if (!timingSafeEqual(hash(received), expectedAuthorization)) {
-        send(response, {
-          ...json(401, { error: 'Sign in to open THE WATCHER.' }),
-          headers: { 'WWW-Authenticate': 'Basic realm="THE WATCHER", charset="UTF-8"' },
-        });
-        return;
+      if (!publicDemo) {
+        if (!expectedAuthorization) throw new InputError('The workspace administrator must configure access.', 503);
+        const received = (request.headers.authorization ?? '').replace(/^basic /i, 'Basic ');
+        if (!timingSafeEqual(hash(received), expectedAuthorization)) {
+          send(response, {
+            ...json(401, { error: 'Sign in to open THE WATCHER.' }),
+            headers: { 'WWW-Authenticate': 'Basic realm="THE WATCHER", charset="UTF-8"' },
+          });
+          return;
+        }
       }
       const base = `${hosted ? 'https' : 'http'}://${request.headers.host}`;
       const url = new URL(request.originalUrl, base);
@@ -41,8 +51,15 @@ export function createHostedApp({
         send(response, { status: 200, type: 'text/html; charset=utf-8', body: shell });
         return;
       }
+      if (publicDemo && request.method === 'GET' && demoModules.has(url.pathname)) {
+        send(response, { status: 200, type: 'text/javascript; charset=utf-8', body: demoModules.get(url.pathname) });
+        return;
+      }
       if (!url.pathname.startsWith('/api/')) throw new InputError('This route was not found.', 404);
-      workspace ??= connect();
+      if (publicDemo && request.method !== 'GET') {
+        throw new InputError('Public demo changes are handled in the browser.', 405);
+      }
+      workspace ??= publicDemo ? { state: () => seed(now()), storage: 'browser' } : connect();
       const result = await handleApi({
         ...workspace, method: request.method, url, readBody: () => readBody(request), now,
       });

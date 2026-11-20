@@ -34,6 +34,7 @@ let data;
 let chartObserver;
 let announcementTimer;
 let loadSequence = 0;
+let demoApi;
 
 function safe(value) {
   return String(value ?? '').replace(/[&<>"']/g, character => ({
@@ -52,12 +53,42 @@ function page() {
 }
 
 async function api(url, method = 'GET', body) {
+  if (demoApi) {
+    const result = await demoApi(url, method, body);
+    return JSON.parse(result.body);
+  }
   const response = await fetch(url, method === 'GET' ? {} : {
     method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.error);
+  if (payload.storage === 'browser') {
+    demoApi = await loadDemo();
+    const result = await demoApi(url, method, body);
+    return JSON.parse(result.body);
+  }
   return payload;
+}
+
+async function loadDemo() {
+  const [{ handleApi }, { seed }] = await Promise.all([
+    import('/demo/api.mjs'), import('/demo/demo.mjs'),
+  ]);
+  const key = 'the-watcher-demo-v1';
+  let current;
+  try { current = JSON.parse(sessionStorage.getItem(key)); } catch { /* Storage can be unavailable. */ }
+  current ??= seed();
+  return (path, method = 'GET', body) => handleApi({
+    method, url: new URL(path, location.origin), readBody: () => body,
+    state: () => current, storage: 'browser', now: Date.now,
+    change(operation) {
+      const next = structuredClone(current);
+      const result = operation(next);
+      current = next;
+      try { sessionStorage.setItem(key, JSON.stringify(current)); } catch { /* Keep changes in memory. */ }
+      return result;
+    },
+  });
 }
 
 async function refresh() {
@@ -239,7 +270,11 @@ function render() {
   if (!data) return;
   chartObserver?.disconnect();
   const current = page();
-  document.querySelector('#storage-status').hidden = data.storage !== 'temporary';
+  const storageStatus = document.querySelector('#storage-status');
+  storageStatus.hidden = !data.storage;
+  storageStatus.textContent = data.storage === 'browser'
+    ? 'Public demo with synthetic data. Changes stay in this browser tab.'
+    : 'Temporary demo. Workspace changes can reset until persistent storage is connected.';
   document.title = `${pages[current]} · THE WATCHER`;
   document.querySelector('#breadcrumb').textContent = pages[current];
   for (const link of document.querySelectorAll('nav a')) {
@@ -399,7 +434,8 @@ function displayFinding(id) {
     ${finding.verifiedBy ? `<p class="summary-line">Verified on ${safe(finding.verifiedBy.release)}.</p>` : ''}
     <p id="form-message" class="form-message" role="alert"></p>
     <div class="dialog-actions">${action ? `<button type="button" class="button primary" data-action="${action[0]}" data-id="${id}">${action[1]}</button>` : ''}
-      <a class="button" download href="/api/findings/${id}/ticket">Download ticket</a></div>`);
+      ${demoApi ? `<button type="button" class="button" data-action="download-demo-ticket" data-id="${id}">Download ticket</button>`
+        : `<a class="button" download href="/api/findings/${id}/ticket">Download ticket</a>`}</div>`);
 }
 
 const recommendations = {
@@ -450,6 +486,15 @@ async function action(button) {
   if (key === 'finding') displayFinding(id);
   if (key === 'endpoint') displayEndpoint(id);
   if (key === 'run') displayRun(id);
+  if (key === 'download-demo-ticket') {
+    const { body, type } = await demoApi(`/api/findings/${id}/ticket`);
+    const url = URL.createObjectURL(new Blob([body], { type }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${id}.md`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   if (key === 'sample') {
     const payload = await api(`/api/sample?kind=${id}`);
     const editor = document.querySelector('#import-json');

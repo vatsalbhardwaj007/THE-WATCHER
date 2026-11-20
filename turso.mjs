@@ -53,7 +53,7 @@ export function connectHostedWorkspace(env = process.env) {
   if (!url && !authToken) {
     let current = seed();
     return {
-      temporary: true,
+      storage: 'temporary',
       state: () => current,
       change(operation) {
         const next = structuredClone(current);

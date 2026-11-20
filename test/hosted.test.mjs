@@ -11,7 +11,8 @@ const now = () => Date.parse('2026-11-20T12:00:00Z');
 
 test('hosted requests require access and concurrent imports do not overwrite each other', async () => {
   const client = createClient({ url: 'file::memory:' });
-  const app = createHostedApp({ accessToken, now, hosted: false, connect: () => createHostedWorkspace(client, now) });
+  const app = createHostedApp({ accessToken, now, hosted: false, publicDemo: false,
+    connect: () => createHostedWorkspace(client, now) });
   const server = app.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const url = `http://127.0.0.1:${server.address().port}`;
@@ -37,5 +38,23 @@ test('hosted requests require access and concurrent imports do not overwrite eac
   } finally {
     await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     client.close();
+  }
+});
+
+test('the public demo opens without credentials and has no shared write API', async () => {
+  const server = createHostedApp({ now, publicDemo: true }).listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const url = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const page = await fetch(url);
+    assert.equal(page.status, 200);
+    assert.equal(page.headers.get('www-authenticate'), null);
+    const state = await (await fetch(url + '/api/workspace')).json();
+    assert.equal(state.storage, 'browser');
+    assert.equal(state.endpoints.length, 16);
+    assert.equal((await fetch(url + '/demo/engine.mjs')).status, 200);
+    assert.equal((await fetch(url + '/api/imports', { method: 'POST' })).status, 405);
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
 });
