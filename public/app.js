@@ -239,6 +239,7 @@ function render() {
   if (!data) return;
   chartObserver?.disconnect();
   const current = page();
+  document.querySelector('#storage-status').hidden = data.storage !== 'temporary';
   document.title = `${pages[current]} · THE WATCHER`;
   document.querySelector('#breadcrumb').textContent = pages[current];
   for (const link of document.querySelectorAll('nav a')) {

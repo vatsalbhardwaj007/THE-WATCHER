@@ -19,13 +19,13 @@ export function apiError(error) {
   return json(500, { error: 'The workspace could not complete the request.' });
 }
 
-export async function handleApi({ method, url, readBody, state, change, now }) {
+export async function handleApi({ method, url, readBody, state, change, now, temporary = false }) {
   const { pathname, searchParams } = url;
   const findingRoute = /^\/api\/findings\/(RW-\d+)(\/ticket)?$/.exec(pathname);
   if (method === 'GET' && pathname === '/api/workspace') {
     const days = searchParams.get('days') ?? '30';
     if (!['30', '90'].includes(days)) throw new InputError('Use a 30 or 90 day inventory window.');
-    return json(200, snapshot(await state(), Number(days), now()));
+    return json(200, { ...snapshot(await state(), Number(days), now()), ...(temporary && { storage: 'temporary' }) });
   }
   if (method === 'GET' && pathname === '/api/sample') {
     const kind = searchParams.get('kind') ?? 'release';

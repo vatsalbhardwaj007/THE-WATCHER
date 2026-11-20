@@ -50,6 +50,19 @@ export function createHostedWorkspace(client, now = Date.now) {
 
 export function connectHostedWorkspace(env = process.env) {
   const { TURSO_DATABASE_URL: url, TURSO_AUTH_TOKEN: authToken } = env;
+  if (!url && !authToken) {
+    let current = seed();
+    return {
+      temporary: true,
+      state: () => current,
+      change(operation) {
+        const next = structuredClone(current);
+        const result = operation(next);
+        current = next;
+        return result;
+      },
+    };
+  }
   if (!url || !authToken) throw new InputError('The hosted workspace database is awaiting configuration.', 503);
   return createHostedWorkspace(createClient({ url, authToken }));
 }

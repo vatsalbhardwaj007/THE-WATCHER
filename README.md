@@ -79,4 +79,4 @@ Import the repository into a Vercel Hobby project for personal, non-commercial u
 
 Set `WATCHER_ACCESS_TOKEN` as a sensitive production environment variable using a generated password of at least 24 printable ASCII characters without spaces. Open the deployment over HTTPS and sign in with username `watcher` and that password. Keep database credentials and the dashboard password in Vercel's environment settings. Apply Vercel Authentication to all environments if you also want Vercel account sign-in.
 
-The hosted database initializes with synthetic data on the first authorized API request. The local SQLite file is separate and stays outside Git.
+The hosted database initializes with synthetic data on the first authorized API request. With neither Turso variable configured, the hosted dashboard shows a clearly marked temporary demo. Its changes are held in memory and can reset between requests. The local SQLite file is separate and stays outside Git.

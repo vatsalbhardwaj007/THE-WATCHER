@@ -49,6 +49,7 @@ button:disabled { cursor: wait; opacity: .7; }
 .nav-count { margin-left: auto; font: 11px var(--mono); display: grid; place-items: center; min-width: 21px; height: 21px; border-radius: 5px; background: #2c3028; color: #e0e9c9; }
 .sidebar-foot { margin-top: auto; padding: 12px 4px 1px; border-top: 1px solid var(--line); }
 .main-shell { min-width: 0; }
+.storage-status { padding: 8px 28px; border-bottom: 1px solid var(--line); background: #352b20; color: var(--gold); font-size: .875rem; }
 .topbar { min-height: 62px; border-bottom: 1px solid var(--line); padding: 9px 28px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .breadcrumbs, .top-actions, .intake, .button { display: flex; align-items: center; gap: 9px; }
 .breadcrumbs { font-size: 14px; color: var(--subtle); }

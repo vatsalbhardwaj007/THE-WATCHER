@@ -42,11 +42,9 @@ export function createHostedApp({
         return;
       }
       if (!url.pathname.startsWith('/api/')) throw new InputError('This route was not found.', 404);
+      workspace ??= connect();
       const result = await handleApi({
-        method: request.method, url, readBody: () => readBody(request),
-        state: () => (workspace ??= connect()).state(),
-        change: operation => (workspace ??= connect()).change(operation),
-        now,
+        ...workspace, method: request.method, url, readBody: () => readBody(request), now,
       });
       send(response, result);
     } catch (error) {
