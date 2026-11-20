@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111414">
+  <meta name="description" content="Deployment evidence, API inventory, and finding review for travel platforms.">
+  <title>THE WATCHER · Security operations</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="shell">
+    <aside class="sidebar">
+      <a href="#overview" class="brand">
+        <span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>THE WATCHER<small>SECURITY OPERATIONS</small></span>
+      </a>
+      <div class="workspace">
+        <span class="workspace-icon" data-icon="layers"></span>
+        <div><strong>Travel platform</strong><small>Local workspace</small></div>
+      </div>
+      <nav aria-label="Workspace navigation">
+        <p>WORKSPACE</p>
+        <a href="#overview"><span data-icon="grid"></span>Overview</a>
+        <a href="#inventory"><span data-icon="network"></span>API inventory</a>
+        <a href="#findings"><span data-icon="shield"></span>Findings <span id="nav-count" class="nav-count" hidden></span></a>
+        <a href="#deployments"><span data-icon="git"></span>Deployments</a>
+        <p>CONTROLS</p>
+        <a href="#audit"><span data-icon="ledger"></span>Audit log</a>
+        <a href="#settings"><span data-icon="settings"></span>Intake settings</a>
+      </nav>
+      <div class="sidebar-foot"><span class="workspace-icon" data-icon="lock"></span><div><strong>Local environment</strong><small>Travel staging scope</small></div></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Workspace</span><span data-icon="chevron"></span><strong id="breadcrumb">Overview</strong></div>
+        <div class="top-actions"><span id="intake-status" class="intake"><i></i>Loading intake</span><button type="button" class="button primary" data-action="import"><span data-icon="plus"></span>Import evidence</button></div>
+      </header>
+      <main id="main" tabindex="-1"><p class="loading" role="status">Loading workspace…</p></main>
+    </div>
+  </div>
+  <dialog id="dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+  <div id="announcements" class="announcements" role="status" aria-live="polite"></div>
+</body>
+</html>
